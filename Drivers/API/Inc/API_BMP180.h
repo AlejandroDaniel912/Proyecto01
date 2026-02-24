@@ -17,7 +17,7 @@
 
 #include I2C_LIB
 #include <stdint.h>
-
+#include "main.h"
 /**
  * @enum _bmp180_oversampling_settings
  * @brief Oversampling settings for BMP180 sensor.

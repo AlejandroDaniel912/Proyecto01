@@ -31,9 +31,12 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+
 #include "vivero_hc05.h"
 #include "API_BMP180.h"
 #include <stdio.h>
+#include <string.h>
+#include "DHT11_01.h"
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -111,7 +114,10 @@ void Error_Handler(void);
 #define LD2_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
-
+#define SDA_Pin GPIO_PIN_0
+#define SDA_Port GPIOE
+#define SCL_Pin GPIO_PIN_0
+#define SCL_Port GPIOA
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

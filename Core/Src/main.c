@@ -23,6 +23,9 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
+#include "API_BMP180.h"
+#include <stdio.h>
+#include <string.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -35,7 +38,7 @@
 #define I2C hi2c1
 #define BLT t800
 #define BLTUART huart6
-#define CMD_BUFFER_SIZE 20
+#define CMD_BUFFER_SIZE 64
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -53,6 +56,8 @@ ETH_HandleTypeDef heth;
 
 I2C_HandleTypeDef hi2c1;
 
+TIM_HandleTypeDef htim3;
+
 UART_HandleTypeDef huart3;
 UART_HandleTypeDef huart6;
 
@@ -61,10 +66,16 @@ PCD_HandleTypeDef hpcd_USB_OTG_FS;
 /* USER CODE BEGIN PV */
 HC05_HandleTypeDef BLT;
 bmp180_t bmp = {.oversampling_setting = standart};
+DHT11_InitTypeDef dht11;
 /* Buffer UART */
-char txBuffer[64];
+char txBuffer1[32];
 char cmd_buffer[CMD_BUFFER_SIZE];
 uint8_t cmd_index = 0;
+char txBuffer2[32];
+char txBuffer3[32];
+char txBuffer4[32];
+char txBuffer5[32];
+char txBuffer6[32];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -75,6 +86,7 @@ static void MX_USART3_UART_Init(void);
 static void MX_USB_OTG_FS_PCD_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_USART6_UART_Init(void);
+static void MX_TIM3_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -101,8 +113,7 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-  HC05_Init(&BLT, &BLTUART);
-  bmp180_init(&I2C,&bmp);
+
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -119,54 +130,68 @@ int main(void)
   MX_USB_OTG_FS_PCD_Init();
   MX_I2C1_Init();
   MX_USART6_UART_Init();
+  MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
+  HAL_DHT11_Init(&dht11, GPIOB, GPIO_PIN_11, &htim3);
+  HC05_Init(&BLT, &BLTUART);
+  bmp180_init(&I2C,&bmp);
   HC05_StartReception(&BLT);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
-  {
-	  while (HC05_Available(&BLT))
-  {
-      uint8_t byte = HC05_Read(&BLT);
+  {  HAL_Delay(2000);
 
-      if (byte == '\r')
-          continue;
-      if (byte == '\n')  // Fin de comando
+  while (HC05_Available(&BLT))
+{
+  uint8_t byte = HC05_Read(&BLT);
+
+  if (byte == '\r')
+      continue;
+  if (byte == '\n')  // Fin de comando
+  {
+      cmd_buffer[cmd_index] = '\0';  // Terminar string
+
+      if (strcmp(cmd_buffer, "FAN:ON") == 0)
       {
-          cmd_buffer[cmd_index] = '\0';  // Terminar string
+          HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
+      }
+      else if (strcmp(cmd_buffer, "FAN:OFF") == 0)
+      {
+          HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+      }
 
-          if (strcmp(cmd_buffer, "FAN:ON") == 0)
-          {
-              HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
-          }
-          else if (strcmp(cmd_buffer, "FAN:OFF") == 0)
-          {
-              HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
-          }
-
-          cmd_index = 0;  // Reset buffer
+      cmd_index = 0;  // Reset buffer
+  }
+  else
+  {
+      if (cmd_index < CMD_BUFFER_SIZE - 1)
+      {
+          cmd_buffer[cmd_index++] = byte;
       }
       else
       {
-          if (cmd_index < CMD_BUFFER_SIZE - 1)
-          {
-              cmd_buffer[cmd_index++] = byte;
-          }
-          else
-          {
-              // Overflow: resetear
-              cmd_index = 0;
-          }
+          // Overflow: resetear
+          cmd_index = 0;
       }
   }
-	  HC05_WriteLine(&BLT,"TEMP:27.4");
-	  HC05_WriteLine(&BLT,"EXT:22.1");
-	  HC05_WriteLine(&BLT,"HUM:60");
-	  HC05_WriteLine(&BLT,"PRES:101.325");
-	  HC05_WriteLine(&BLT,"FAN:OFF");
-	  HC05_WriteLine(&BLT,"ROOF:CLOSED");
+}
+  DHT11_StatusTypeDef status = HAL_DHT11_ReadData(&dht11);
+bmp180_get_all(&bmp);
+
+  snprintf(txBuffer1, sizeof(txBuffer1),"EXT:%.1f",bmp.temperature);
+HC05_WriteLine(&BLT,txBuffer1);
+snprintf(txBuffer2, sizeof(txBuffer2),"TEMP:%.1f",dht11.Temperature);
+HC05_WriteLine(&BLT,txBuffer2);
+snprintf(txBuffer3, sizeof(txBuffer3),"HUM:%.1f",dht11.Humidity);
+HC05_WriteLine(&BLT,txBuffer3);
+snprintf(txBuffer4, sizeof(txBuffer4),"PRES: %.2f", bmp.pressure / 100.0f);
+HC05_WriteLine(&BLT,txBuffer4);
+HC05_WriteLine(&BLT,"FAN:OFF");
+HC05_WriteLine(&BLT,"ROOF:CLOSED");
+
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -313,6 +338,51 @@ static void MX_I2C1_Init(void)
   /* USER CODE BEGIN I2C1_Init 2 */
 
   /* USER CODE END I2C1_Init 2 */
+
+}
+
+/**
+  * @brief TIM3 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM3_Init(void)
+{
+
+  /* USER CODE BEGIN TIM3_Init 0 */
+
+  /* USER CODE END TIM3_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM3_Init 1 */
+
+  /* USER CODE END TIM3_Init 1 */
+  htim3.Instance = TIM3;
+  htim3.Init.Prescaler = 83;
+  htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim3.Init.Period = 65535;
+  htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim3, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM3_Init 2 */
+
+  /* USER CODE END TIM3_Init 2 */
 
 }
 
@@ -470,7 +540,21 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(USB_OverCurrent_GPIO_Port, &GPIO_InitStruct);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
+  HAL_GPIO_WritePin(SDA_Port, SDA_Pin, GPIO_PIN_SET);
 
+  GPIO_InitStruct.Pin = SDA_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  HAL_GPIO_WritePin(SCL_Port, SCL_Pin, GPIO_PIN_SET);
+
+  GPIO_InitStruct.Pin = SCL_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
   /* USER CODE END MX_GPIO_Init_2 */
 }
 
@@ -482,7 +566,6 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
         HC05_RxCpltCallback(&BLT);
     }
 }
-
 /* USER CODE END 4 */
 
 /**

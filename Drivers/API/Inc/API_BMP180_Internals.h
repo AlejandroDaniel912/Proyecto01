@@ -12,8 +12,8 @@
 #include <stdint.h>
 
 // Slave address
-#define BMP180_7_BIT_ADDRESS 0b1110111
-#define BMP180_ADDRESS      (BMP180_7_BIT_ADDRESS << 1)
+#define BMP180_7_BIT_ADDRESS 0x77
+#define BMP180_ADDRESS      0xEE   // 0x77 << 1
 
 // Registers
 #define CALIB     0xAA

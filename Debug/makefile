@@ -35,34 +35,34 @@ $(wildcard ../makefile.init) \
 $(wildcard ../makefile.targets) \
 
 
-BUILD_ARTIFACT_NAME := Project_Prueba01
+BUILD_ARTIFACT_NAME := Project_PruebaBMP01
 BUILD_ARTIFACT_EXTENSION := elf
 BUILD_ARTIFACT_PREFIX :=
 BUILD_ARTIFACT := $(BUILD_ARTIFACT_PREFIX)$(BUILD_ARTIFACT_NAME)$(if $(BUILD_ARTIFACT_EXTENSION),.$(BUILD_ARTIFACT_EXTENSION),)
 
 # Add inputs and outputs from these tool invocations to the build variables 
 EXECUTABLES += \
-Project_Prueba01.elf \
+Project_PruebaBMP01.elf \
 
 MAP_FILES += \
-Project_Prueba01.map \
+Project_PruebaBMP01.map \
 
 SIZE_OUTPUT += \
 default.size.stdout \
 
 OBJDUMP_LIST += \
-Project_Prueba01.list \
+Project_PruebaBMP01.list \
 
 
 # All Target
 all: main-build
 
 # Main-build Target
-main-build: Project_Prueba01.elf secondary-outputs
+main-build: Project_PruebaBMP01.elf secondary-outputs
 
 # Tool invocations
-Project_Prueba01.elf Project_Prueba01.map: $(OBJS) $(USER_OBJS) C:\Users\ale55\STM32CubeIDE\workspace_1.18.1\Project_Prueba01\STM32F429ZITX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "Project_Prueba01.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\ale55\STM32CubeIDE\workspace_1.18.1\Project_Prueba01\STM32F429ZITX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Project_Prueba01.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Project_PruebaBMP01.elf Project_PruebaBMP01.map: $(OBJS) $(USER_OBJS) C:\Users\ale55\STM32CubeIDE\workspace_1.18.1\Project_PruebaBMP01\STM32F429ZITX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "Project_PruebaBMP01.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\ale55\STM32CubeIDE\workspace_1.18.1\Project_PruebaBMP01\STM32F429ZITX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Project_PruebaBMP01.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -71,14 +71,14 @@ default.size.stdout: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
 	@echo 'Finished building: $@'
 	@echo ' '
 
-Project_Prueba01.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "Project_Prueba01.list"
+Project_PruebaBMP01.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "Project_PruebaBMP01.list"
 	@echo 'Finished building: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) Project_Prueba01.elf Project_Prueba01.list Project_Prueba01.map default.size.stdout
+	-$(RM) Project_PruebaBMP01.elf Project_PruebaBMP01.list Project_PruebaBMP01.map default.size.stdout
 	-@echo ' '
 
 secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST)

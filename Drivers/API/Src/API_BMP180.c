@@ -5,6 +5,7 @@
  *      Author: ale55
  */
 #include "API_BMP180_Internals.h"
+#include "API_BMP180.h"
 #include <math.h>
 
 static void bmp180_read(bmp180_t *bmp180, uint8_t reg, uint8_t *buffer, uint8_t size)
