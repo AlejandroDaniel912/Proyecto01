@@ -231,6 +231,7 @@ HC05_WriteLine(&BLT,"ROOF:CLOSED");
 snprintf(uartBuf, sizeof(uartBuf),"Temp: %.1f C   Hum: %.1f %%\r\n",dht11.Temperature, dht11.Humidity);
 
 HAL_UART_Transmit(&huart3, (uint8_t*)uartBuf,strlen(uartBuf), HAL_MAX_DELAY);
+snprintf(uartBuf, sizeof(uartBuf),"TempEX: %.1f C   PRES: %.2f hPa\r\n",bmp.temperature, bmp.pressure / 100.0f);
 HAL_UART_Transmit(&huart3, (uint8_t*)uartBuf,strlen(uartBuf), HAL_MAX_DELAY);
 snprintf(uartBuf, sizeof(uartBuf),
          "Diff: %.2f C\r\n", diff);
@@ -251,8 +252,8 @@ HAL_UART_Transmit(&huart3,
               veloc = 60;
           else if (diff > 0.5f)
               veloc = 40;
-          else if (diff > 0.3f)
-              veloc = 20;
+          else if (diff > 0.2f)
+              veloc = 30;
           else
               veloc = 0;
 
