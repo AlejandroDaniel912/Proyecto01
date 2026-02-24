@@ -1,0 +1,8 @@
+../Drivers/API/Src/vivero_hc05.c:11:6:HC05_Init	1
+../Drivers/API/Src/vivero_hc05.c:18:6:HC05_StartReception	1
+../Drivers/API/Src/vivero_hc05.c:23:6:HC05_Tx	1
+../Drivers/API/Src/vivero_hc05.c:28:6:HC05_WriteString	2
+../Drivers/API/Src/vivero_hc05.c:35:6:HC05_WriteLine	2
+../Drivers/API/Src/vivero_hc05.c:43:6:HC05_Available	1
+../Drivers/API/Src/vivero_hc05.c:48:9:HC05_Read	2
+../Drivers/API/Src/vivero_hc05.c:61:6:HC05_RxCpltCallback	2

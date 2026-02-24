@@ -1,0 +1,11 @@
+../Drivers/API/Src/API_BMP180.c:10:13:bmp180_read	1
+../Drivers/API/Src/API_BMP180.c:15:13:bmp180_write	1
+../Drivers/API/Src/API_BMP180.c:20:12:bmp180_is_ready	1
+../Drivers/API/Src/API_BMP180.c:31:9:bmp180_init	10
+../Drivers/API/Src/API_BMP180.c:110:6:bmp180_get_all	1
+../Drivers/API/Src/API_BMP180.c:117:16:_bmp180_read_ut	1
+../Drivers/API/Src/API_BMP180.c:128:16:_bmp180_read_up	5
+../Drivers/API/Src/API_BMP180.c:161:6:bmp180_get_temperature	3
+../Drivers/API/Src/API_BMP180.c:177:6:bmp180_get_pressure	15
+../Drivers/API/Src/API_BMP180.c:208:6:bmp180_get_altitude	1
+../Drivers/API/Src/API_BMP180.c:219:6:bmp180_set_sea_pressure	1
