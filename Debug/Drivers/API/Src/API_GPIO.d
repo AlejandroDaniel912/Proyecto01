@@ -1,5 +1,5 @@
-Core/Src/stm32f4xx_it.o: ../Core/Src/stm32f4xx_it.c ../Core/Inc/main.h \
- ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h \
+Drivers/API/Src/API_GPIO.o: ../Drivers/API/Src/API_GPIO.c \
+ ../Core/Inc/main.h ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h \
  ../Core/Inc/stm32f4xx_hal_conf.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_def.h \
@@ -38,8 +38,7 @@ Core/Src/stm32f4xx_it.o: ../Core/Src/stm32f4xx_it.c ../Core/Inc/main.h \
  C:/Users/ale55/STM32CubeIDE/workspace_1.18.1/Project_PruebaBMP01/Drivers/API/Inc/DHT11_01.h \
  C:/Users/ale55/STM32CubeIDE/workspace_1.18.1/Project_PruebaBMP01/Drivers/API/Inc/API_GPIO.h \
  C:/Users/ale55/STM32CubeIDE/workspace_1.18.1/Project_PruebaBMP01/Drivers/API/Inc/API_Delay.h \
- C:/Users/ale55/STM32CubeIDE/workspace_1.18.1/Project_PruebaBMP01/Drivers/API/Inc/Driver_PWM.h \
- ../Core/Inc/stm32f4xx_it.h
+ C:/Users/ale55/STM32CubeIDE/workspace_1.18.1/Project_PruebaBMP01/Drivers/API/Inc/Driver_PWM.h
 ../Core/Inc/main.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:
 ../Core/Inc/stm32f4xx_hal_conf.h:
@@ -81,4 +80,3 @@ C:/Users/ale55/STM32CubeIDE/workspace_1.18.1/Project_PruebaBMP01/Drivers/API/Inc
 C:/Users/ale55/STM32CubeIDE/workspace_1.18.1/Project_PruebaBMP01/Drivers/API/Inc/API_GPIO.h:
 C:/Users/ale55/STM32CubeIDE/workspace_1.18.1/Project_PruebaBMP01/Drivers/API/Inc/API_Delay.h:
 C:/Users/ale55/STM32CubeIDE/workspace_1.18.1/Project_PruebaBMP01/Drivers/API/Inc/Driver_PWM.h:
-../Core/Inc/stm32f4xx_it.h:

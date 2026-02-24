@@ -37,6 +37,9 @@ extern "C" {
 #include <stdio.h>
 #include <string.h>
 #include "DHT11_01.h"
+#include "API_GPIO.h"
+#include "API_Delay.h"
+#include "Driver_PWM.h"
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/

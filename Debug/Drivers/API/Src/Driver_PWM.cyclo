@@ -1,0 +1,6 @@
+../Drivers/API/Src/Driver_PWM.c:11:13:Motor_UpdatePWM	4
+../Drivers/API/Src/Driver_PWM.c:20:6:Motor_Init	1
+../Drivers/API/Src/Driver_PWM.c:45:6:Motor_SetSpeed	2
+../Drivers/API/Src/Driver_PWM.c:55:6:Motor_SetDirection	2
+../Drivers/API/Src/Driver_PWM.c:71:6:Motor_Stop	4
+../Drivers/API/Src/Driver_PWM.c:81:9:Motor_GetSpeed	1

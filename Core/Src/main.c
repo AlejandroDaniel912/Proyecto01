@@ -39,6 +39,9 @@
 #define BLT t800
 #define BLTUART huart6
 #define CMD_BUFFER_SIZE 64
+#define TIME_BMP 1000
+#define TIME_DHT 1500
+#define TIME_BLT 2000
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -64,23 +67,25 @@ UART_HandleTypeDef huart6;
 PCD_HandleTypeDef hpcd_USB_OTG_FS;
 
 /* USER CODE BEGIN PV */
+Motor_HandleTypeDef Coolers;
+int modo = 0;
+int submodo = 10;
+int veloc = 50;
 HC05_HandleTypeDef BLT;
 bmp180_t bmp = {.oversampling_setting = standart};
 DHT11_InitTypeDef dht11;
 /* Buffer UART */
-char txBuffer1[32];
+char txBuffer[32];
 char cmd_buffer[CMD_BUFFER_SIZE];
 uint8_t cmd_index = 0;
-char txBuffer2[32];
-char txBuffer3[32];
-char txBuffer4[32];
-char txBuffer5[32];
-char txBuffer6[32];
+delay_t delayDHT;
+delay_t delayBMP;
+delay_t delayBLT;
+char uartBuf[64];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
-static void MX_GPIO_Init(void);
 static void MX_ETH_Init(void);
 static void MX_USART3_UART_Init(void);
 static void MX_USB_OTG_FS_PCD_Init(void);
@@ -136,12 +141,15 @@ int main(void)
   HC05_Init(&BLT, &BLTUART);
   bmp180_init(&I2C,&bmp);
   HC05_StartReception(&BLT);
+  delayInit(&delayDHT, TIME_DHT);
+  delayInit(&delayBMP, TIME_BMP);
+  delayInit(&delayBLT, TIME_BLT);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
-  {  HAL_Delay(2000);
+  {
 
   while (HC05_Available(&BLT))
 {
@@ -153,11 +161,28 @@ int main(void)
   {
       cmd_buffer[cmd_index] = '\0';  // Terminar string
 
-      if (strcmp(cmd_buffer, "FAN:ON") == 0)
+      if (strcmp(cmd_buffer, "MODE:AUTO") == 0)
       {
+
           HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
       }
+      else if (strcmp(cmd_buffer, "MODE:MANUAL") == 0)
+      {
+          HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+      }
+      else if (strcmp(cmd_buffer, "FAN:ON") == 0)
+      {
+          HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+      }
       else if (strcmp(cmd_buffer, "FAN:OFF") == 0)
+      {
+          HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+      }
+      else if (strcmp(cmd_buffer, "FAN:50") == 0)
+      {
+          HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+      }
+      else if (strcmp(cmd_buffer, "FAN:100") == 0)
       {
           HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
       }
@@ -177,20 +202,25 @@ int main(void)
       }
   }
 }
-  DHT11_StatusTypeDef status = HAL_DHT11_ReadData(&dht11);
-bmp180_get_all(&bmp);
+  if (delayRead(&delayDHT))
+  HAL_DHT11_ReadData(&dht11);
+  if (delayRead(&delayBMP))
+  bmp180_get_all(&bmp);
 
-  snprintf(txBuffer1, sizeof(txBuffer1),"EXT:%.1f",bmp.temperature);
-HC05_WriteLine(&BLT,txBuffer1);
-snprintf(txBuffer2, sizeof(txBuffer2),"TEMP:%.1f",dht11.Temperature);
-HC05_WriteLine(&BLT,txBuffer2);
-snprintf(txBuffer3, sizeof(txBuffer3),"HUM:%.1f",dht11.Humidity);
-HC05_WriteLine(&BLT,txBuffer3);
-snprintf(txBuffer4, sizeof(txBuffer4),"PRES: %.2f", bmp.pressure / 100.0f);
-HC05_WriteLine(&BLT,txBuffer4);
+  if (delayRead(&delayBLT)){ snprintf(txBuffer, sizeof(txBuffer),"EXT:%.1f",bmp.temperature);
+HC05_WriteLine(&BLT,txBuffer);
+snprintf(txBuffer, sizeof(txBuffer),"TEMP:%.1f",dht11.Temperature);
+HC05_WriteLine(&BLT,txBuffer);
+snprintf(txBuffer, sizeof(txBuffer),"HUM:%.1f",dht11.Humidity);
+HC05_WriteLine(&BLT,txBuffer);
+snprintf(txBuffer, sizeof(txBuffer),"PRES: %.2f", bmp.pressure / 100.0f);
+HC05_WriteLine(&BLT,txBuffer);
 HC05_WriteLine(&BLT,"FAN:OFF");
 HC05_WriteLine(&BLT,"ROOF:CLOSED");
+snprintf(uartBuf, sizeof(uartBuf),"Temp: %.1f C   Hum: %.1f %%\r\n",dht11.Temperature, dht11.Humidity);
 
+HAL_UART_Transmit(&huart3, (uint8_t*)uartBuf,strlen(uartBuf), HAL_MAX_DELAY);
+  }
 
     /* USER CODE END WHILE */
 
@@ -435,7 +465,7 @@ static void MX_USART6_UART_Init(void)
 
   /* USER CODE END USART6_Init 1 */
   huart6.Instance = USART6;
-  huart6.Init.BaudRate = 9600;
+  huart6.Init.BaudRate = 115200;
   huart6.Init.WordLength = UART_WORDLENGTH_8B;
   huart6.Init.StopBits = UART_STOPBITS_1;
   huart6.Init.Parity = UART_PARITY_NONE;
@@ -492,71 +522,7 @@ static void MX_USB_OTG_FS_PCD_Init(void)
   * @param None
   * @retval None
   */
-static void MX_GPIO_Init(void)
-{
-  GPIO_InitTypeDef GPIO_InitStruct = {0};
-  /* USER CODE BEGIN MX_GPIO_Init_1 */
 
-  /* USER CODE END MX_GPIO_Init_1 */
-
-  /* GPIO Ports Clock Enable */
-  __HAL_RCC_GPIOC_CLK_ENABLE();
-  __HAL_RCC_GPIOH_CLK_ENABLE();
-  __HAL_RCC_GPIOA_CLK_ENABLE();
-  __HAL_RCC_GPIOB_CLK_ENABLE();
-  __HAL_RCC_GPIOD_CLK_ENABLE();
-  __HAL_RCC_GPIOG_CLK_ENABLE();
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, LD1_Pin|LD3_Pin|LD2_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(USB_PowerSwitchOn_GPIO_Port, USB_PowerSwitchOn_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin : USER_Btn_Pin */
-  GPIO_InitStruct.Pin = USER_Btn_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(USER_Btn_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : LD1_Pin LD3_Pin LD2_Pin */
-  GPIO_InitStruct.Pin = LD1_Pin|LD3_Pin|LD2_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : USB_PowerSwitchOn_Pin */
-  GPIO_InitStruct.Pin = USB_PowerSwitchOn_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(USB_PowerSwitchOn_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : USB_OverCurrent_Pin */
-  GPIO_InitStruct.Pin = USB_OverCurrent_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(USB_OverCurrent_GPIO_Port, &GPIO_InitStruct);
-
-  /* USER CODE BEGIN MX_GPIO_Init_2 */
-  HAL_GPIO_WritePin(SDA_Port, SDA_Pin, GPIO_PIN_SET);
-
-  GPIO_InitStruct.Pin = SDA_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-  HAL_GPIO_WritePin(SCL_Port, SCL_Pin, GPIO_PIN_SET);
-
-  GPIO_InitStruct.Pin = SCL_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-  /* USER CODE END MX_GPIO_Init_2 */
-}
 
 /* USER CODE BEGIN 4 */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)

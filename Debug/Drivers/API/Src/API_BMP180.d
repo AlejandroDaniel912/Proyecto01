@@ -38,7 +38,10 @@ Drivers/API/Src/API_BMP180.o: ../Drivers/API/Src/API_BMP180.c \
  ../Core/Inc/main.h \
  C:/Users/ale55/STM32CubeIDE/workspace_1.18.1/Project_PruebaBMP01/Drivers/API/Inc/vivero_hc05.h \
  C:/Users/ale55/STM32CubeIDE/workspace_1.18.1/Project_PruebaBMP01/Drivers/API/Inc/API_BMP180.h \
- C:/Users/ale55/STM32CubeIDE/workspace_1.18.1/Project_PruebaBMP01/Drivers/API/Inc/DHT11_01.h
+ C:/Users/ale55/STM32CubeIDE/workspace_1.18.1/Project_PruebaBMP01/Drivers/API/Inc/DHT11_01.h \
+ C:/Users/ale55/STM32CubeIDE/workspace_1.18.1/Project_PruebaBMP01/Drivers/API/Inc/API_GPIO.h \
+ C:/Users/ale55/STM32CubeIDE/workspace_1.18.1/Project_PruebaBMP01/Drivers/API/Inc/API_Delay.h \
+ C:/Users/ale55/STM32CubeIDE/workspace_1.18.1/Project_PruebaBMP01/Drivers/API/Inc/Driver_PWM.h
 C:/Users/ale55/STM32CubeIDE/workspace_1.18.1/Project_PruebaBMP01/Drivers/API/Inc/API_BMP180_Internals.h:
 C:/Users/ale55/STM32CubeIDE/workspace_1.18.1/Project_PruebaBMP01/Drivers/API/Inc/API_BMP180.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:
@@ -79,3 +82,6 @@ C:/Users/ale55/STM32CubeIDE/workspace_1.18.1/Project_PruebaBMP01/Drivers/API/Inc
 C:/Users/ale55/STM32CubeIDE/workspace_1.18.1/Project_PruebaBMP01/Drivers/API/Inc/vivero_hc05.h:
 C:/Users/ale55/STM32CubeIDE/workspace_1.18.1/Project_PruebaBMP01/Drivers/API/Inc/API_BMP180.h:
 C:/Users/ale55/STM32CubeIDE/workspace_1.18.1/Project_PruebaBMP01/Drivers/API/Inc/DHT11_01.h:
+C:/Users/ale55/STM32CubeIDE/workspace_1.18.1/Project_PruebaBMP01/Drivers/API/Inc/API_GPIO.h:
+C:/Users/ale55/STM32CubeIDE/workspace_1.18.1/Project_PruebaBMP01/Drivers/API/Inc/API_Delay.h:
+C:/Users/ale55/STM32CubeIDE/workspace_1.18.1/Project_PruebaBMP01/Drivers/API/Inc/Driver_PWM.h:
