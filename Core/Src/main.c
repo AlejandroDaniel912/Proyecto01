@@ -59,6 +59,7 @@ ETH_HandleTypeDef heth;
 
 I2C_HandleTypeDef hi2c1;
 
+TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim3;
 
 UART_HandleTypeDef huart3;
@@ -69,6 +70,7 @@ PCD_HandleTypeDef hpcd_USB_OTG_FS;
 /* USER CODE BEGIN PV */
 Motor_HandleTypeDef Coolers;
 int modo = 0;
+int PWM = 100;
 int submodo = 10;
 int veloc = 50;
 HC05_HandleTypeDef BLT;
@@ -82,6 +84,9 @@ delay_t delayDHT;
 delay_t delayBMP;
 delay_t delayBLT;
 char uartBuf[64];
+float temp1=0;
+float temp2=0;
+float diff=0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -92,6 +97,7 @@ static void MX_USB_OTG_FS_PCD_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_USART6_UART_Init(void);
 static void MX_TIM3_Init(void);
+static void MX_TIM1_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -125,7 +131,7 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-
+	  Motor_SetDirection(&Coolers, MOTOR_DIR_FORWARD);
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -136,14 +142,17 @@ int main(void)
   MX_I2C1_Init();
   MX_USART6_UART_Init();
   MX_TIM3_Init();
+  MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
-  HAL_DHT11_Init(&dht11, GPIOB, GPIO_PIN_11, &htim3);
-  HC05_Init(&BLT, &BLTUART);
-  bmp180_init(&I2C,&bmp);
-  HC05_StartReception(&BLT);
-  delayInit(&delayDHT, TIME_DHT);
-  delayInit(&delayBMP, TIME_BMP);
-  delayInit(&delayBLT, TIME_BLT);
+	  Motor_Init(&Coolers,&htim1,TIM_CHANNEL_4,IN1_PORT, IN1_PIN,IN2_PORT, IN2_PIN);
+	  HAL_DHT11_Init(&dht11, GPIOB, GPIO_PIN_11, &htim3);
+	  HC05_Init(&BLT, &BLTUART);
+	  bmp180_init(&I2C,&bmp);
+	  HC05_StartReception(&BLT);
+	  delayInit(&delayDHT, TIME_DHT);
+	  delayInit(&delayBMP, TIME_BMP);
+	  delayInit(&delayBLT, TIME_BLT);
+	  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -206,7 +215,9 @@ int main(void)
   HAL_DHT11_ReadData(&dht11);
   if (delayRead(&delayBMP))
   bmp180_get_all(&bmp);
-
+  temp2 = bmp.temperature;
+  temp1 = dht11.Temperature;
+  diff = temp1 - temp2;
   if (delayRead(&delayBLT)){ snprintf(txBuffer, sizeof(txBuffer),"EXT:%.1f",bmp.temperature);
 HC05_WriteLine(&BLT,txBuffer);
 snprintf(txBuffer, sizeof(txBuffer),"TEMP:%.1f",dht11.Temperature);
@@ -220,8 +231,39 @@ HC05_WriteLine(&BLT,"ROOF:CLOSED");
 snprintf(uartBuf, sizeof(uartBuf),"Temp: %.1f C   Hum: %.1f %%\r\n",dht11.Temperature, dht11.Humidity);
 
 HAL_UART_Transmit(&huart3, (uint8_t*)uartBuf,strlen(uartBuf), HAL_MAX_DELAY);
+HAL_UART_Transmit(&huart3, (uint8_t*)uartBuf,strlen(uartBuf), HAL_MAX_DELAY);
+snprintf(uartBuf, sizeof(uartBuf),
+         "Diff: %.2f C\r\n", diff);
+HAL_UART_Transmit(&huart3,
+                  (uint8_t*)uartBuf,
+                  strlen(uartBuf),
+                  HAL_MAX_DELAY);
+  }
+  switch(modo)
+  {
+      case 0:
+
+          if (diff > 1.5f)
+              veloc = 100;
+          else if (diff > 1.1f)
+              veloc = 80;
+          else if (diff > 0.8f)
+              veloc = 60;
+          else if (diff > 0.5f)
+              veloc = 40;
+          else if (diff > 0.3f)
+              veloc = 20;
+          else
+              veloc = 0;
+
+          break;
+
+      default:
+          veloc = 0;
+          break;
   }
 
+  Motor_SetSpeed(&Coolers, veloc);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -368,6 +410,80 @@ static void MX_I2C1_Init(void)
   /* USER CODE BEGIN I2C1_Init 2 */
 
   /* USER CODE END I2C1_Init 2 */
+
+}
+
+/**
+  * @brief TIM1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM1_Init(void)
+{
+
+  /* USER CODE BEGIN TIM1_Init 0 */
+
+  /* USER CODE END TIM1_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+  TIM_OC_InitTypeDef sConfigOC = {0};
+  TIM_BreakDeadTimeConfigTypeDef sBreakDeadTimeConfig = {0};
+
+  /* USER CODE BEGIN TIM1_Init 1 */
+
+  /* USER CODE END TIM1_Init 1 */
+  htim1.Instance = TIM1;
+  htim1.Init.Prescaler = 167;
+  htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim1.Init.Period = 100;
+  htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim1.Init.RepetitionCounter = 0;
+  htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim1, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_PWM_Init(&htim1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim1, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sConfigOC.OCMode = TIM_OCMODE_PWM1;
+  sConfigOC.Pulse = 0;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+  sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
+  sConfigOC.OCNIdleState = TIM_OCNIDLESTATE_RESET;
+  if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_4) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sBreakDeadTimeConfig.OffStateRunMode = TIM_OSSR_DISABLE;
+  sBreakDeadTimeConfig.OffStateIDLEMode = TIM_OSSI_DISABLE;
+  sBreakDeadTimeConfig.LockLevel = TIM_LOCKLEVEL_OFF;
+  sBreakDeadTimeConfig.DeadTime = 0;
+  sBreakDeadTimeConfig.BreakState = TIM_BREAK_DISABLE;
+  sBreakDeadTimeConfig.BreakPolarity = TIM_BREAKPOLARITY_HIGH;
+  sBreakDeadTimeConfig.AutomaticOutput = TIM_AUTOMATICOUTPUT_DISABLE;
+  if (HAL_TIMEx_ConfigBreakDeadTime(&htim1, &sBreakDeadTimeConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM1_Init 2 */
+
+  /* USER CODE END TIM1_Init 2 */
+  HAL_TIM_MspPostInit(&htim1);
 
 }
 
